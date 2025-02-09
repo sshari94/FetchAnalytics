@@ -1,0 +1,72 @@
+Create Tables:
+
+
+CREATE TABLE Users (
+    user_id UUID PRIMARY KEY,
+    active BOOLEAN,
+    created_date TIMESTAMP,
+    last_login TIMESTAMP,
+    role VARCHAR(20),
+    sign_up_source VARCHAR(50),
+    state VARCHAR(2)
+);
+
+
+CREATE TABLE Receipts (
+    receipt_id UUID PRIMARY KEY,
+    user_id UUID REFERENCES Users(user_id),
+    bonus_points_earned INT,
+    bonus_points_reason TEXT,
+    create_date TIMESTAMP,
+    date_scanned TIMESTAMP,
+    finished_date TIMESTAMP,
+    modify_date TIMESTAMP,
+    points_awarded_date TIMESTAMP,
+    points_earned DECIMAL(10,2),
+    purchase_date TIMESTAMP,
+    purchased_item_count INT,
+    rewards_receipt_status VARCHAR(50),
+    total_spent DECIMAL(10,2)
+);
+
+
+CREATE TABLE Brands (
+    brand_id UUID PRIMARY KEY,
+    barcode VARCHAR(50) UNIQUE,
+    brand_code VARCHAR(100),
+    category VARCHAR(100),
+    category_code VARCHAR(50),
+    cpg_id UUID REFERENCES CPGs(cpg_id),
+    name VARCHAR(255),
+    top_brand BOOLEAN
+);
+
+
+CREATE TABLE ReceiptItems (
+    item_id UUID PRIMARY KEY,
+    receipt_id UUID REFERENCES Receipts(receipt_id),
+    barcode VARCHAR(50),
+    description TEXT,
+    final_price DECIMAL(10,2),
+    item_price DECIMAL(10,2),
+    quantity_purchased INT,
+    user_flagged_barcode VARCHAR(50),
+    user_flagged_new_item BOOLEAN,
+    user_flagged_price DECIMAL(10,2),
+    user_flagged_quantity INT,
+    needs_fetch_review BOOLEAN,
+    needs_fetch_review_reason TEXT,
+    partner_item_id VARCHAR(50),
+    rewards_group TEXT,
+    points_not_awarded_reason TEXT,
+    rewards_product_partner_id VARCHAR(50)
+);
+
+
+CREATE TABLE CPGs (
+    cpg_id UUID PRIMARY KEY,
+    name VARCHAR(255),
+    category VARCHAR(100),
+    category_code VARCHAR(50)
+);
+

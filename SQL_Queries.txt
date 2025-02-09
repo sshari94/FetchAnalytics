@@ -1,0 +1,87 @@
+SQL Queries.
+
+Some assumptions made here are:
+
+Recent vs Previous Month: I used EXTRACT(MONTH FROM ...) to filter receipts based on the month and year. The assumption is that the database has accurate date_scanned timestamps and that the current date is being used for determining "recent" data.
+
+Status Consideration: The "Accepted" and "Rejected" statuses in the rewardsReceiptStatus field are assumed to represent two distinct states that allow us to compare spend and items purchased.
+
+User Creation Date: Users who have signed up in the past 6 months are filtered by their created_date, assuming that the created_date column is consistently updated.
+
+Join Operations: I assumed that each receipt has associated items (in the ReceiptItems table), and each item is linked to a brand via barcode.
+
+1. Top 5 Brands by Receipts Scanned for the Most Recent Month
+
+SELECT b.name AS brand_name, COUNT(r.receipt_id) AS receipts_scanned
+FROM Receipts r
+JOIN ReceiptItems ri ON r.receipt_id = ri.receipt_id
+JOIN Brands b ON ri.barcode = b.barcode
+WHERE EXTRACT(MONTH FROM r.date_scanned) = EXTRACT(MONTH FROM CURRENT_DATE)
+AND EXTRACT(YEAR FROM r.date_scanned) = EXTRACT(YEAR FROM CURRENT_DATE)
+GROUP BY b.name
+ORDER BY receipts_scanned DESC
+LIMIT 5;
+
+2. Comparison of Ranking for the Top 5 Brands Between Recent and Previous Month
+
+SELECT b.name AS brand_name, COUNT(r.receipt_id) AS receipts_scanned, 
+       'Recent Month' AS period
+FROM Receipts r
+JOIN ReceiptItems ri ON r.receipt_id = ri.receipt_id
+JOIN Brands b ON ri.barcode = b.barcode
+WHERE EXTRACT(MONTH FROM r.date_scanned) = EXTRACT(MONTH FROM CURRENT_DATE)
+AND EXTRACT(YEAR FROM r.date_scanned) = EXTRACT(YEAR FROM CURRENT_DATE)
+GROUP BY b.name
+UNION
+SELECT b.name AS brand_name, COUNT(r.receipt_id) AS receipts_scanned, 
+       'Previous Month' AS period
+FROM Receipts r
+JOIN ReceiptItems ri ON r.receipt_id = ri.receipt_id
+JOIN Brands b ON ri.barcode = b.barcode
+WHERE EXTRACT(MONTH FROM r.date_scanned) = EXTRACT(MONTH FROM CURRENT_DATE) - 1
+AND EXTRACT(YEAR FROM r.date_scanned) = EXTRACT(YEAR FROM CURRENT_DATE)
+GROUP BY b.name
+ORDER BY period, receipts_scanned DESC;
+
+3. Comparison of Average Spend for 'Accepted' or 'Rejected' Status
+
+SELECT rewards_receipt_status, AVG(total_spent) AS average_spent
+FROM Receipts
+WHERE rewards_receipt_status IN ('Accepted', 'Rejected')
+GROUP BY rewards_receipt_status
+ORDER BY average_spent DESC
+LIMIT 1;
+
+
+4. Comparison of Total Number of Items Purchased for 'Accepted' or 'Rejected' Status
+
+SELECT rewards_receipt_status, SUM(purchased_item_count) AS total_items_purchased
+FROM Receipts
+WHERE rewards_receipt_status IN ('Accepted', 'Rejected')
+GROUP BY rewards_receipt_status
+ORDER BY total_items_purchased DESC
+LIMIT 1;
+
+5. Brand with the Most Spend Among Users Created in the Past 6 Months
+
+SELECT b.name AS brand_name, SUM(r.total_spent) AS total_spent
+FROM Receipts r
+JOIN ReceiptItems ri ON r.receipt_id = ri.receipt_id
+JOIN Brands b ON ri.barcode = b.barcode
+JOIN Users u ON r.user_id = u.user_id
+WHERE u.created_date >= CURRENT_DATE - INTERVAL '6 months'
+GROUP BY b.name
+ORDER BY total_spent DESC
+LIMIT 1;
+
+6. Brand with the Most Transactions Among Users Created in the Past 6 Months
+
+SELECT b.name AS brand_name, COUNT(r.receipt_id) AS total_transactions
+FROM Receipts r
+JOIN ReceiptItems ri ON r.receipt_id = ri.receipt_id
+JOIN Brands b ON ri.barcode = b.barcode
+JOIN Users u ON r.user_id = u.user_id
+WHERE u.created_date >= CURRENT_DATE - INTERVAL '6 months'
+GROUP BY b.name
+ORDER BY total_transactions DESC
+LIMIT 1;

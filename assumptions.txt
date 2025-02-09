@@ -1,0 +1,25 @@
+Assumptions:
+
+Key assumptions about your data model and business logic:
+
+Receipts Table:
+
+Each receipt is associated with a user.
+Receipts have a rewardsReceiptStatus (such as "Accepted" or "Rejected").
+Each receipt contains a total_spent and purchased_item_count, which will be useful for comparing spend and transactions.
+
+Brand-Receipt Link:
+
+Each item in the receipt is linked to a specific brand via barcode. We can assume that each item belongs to one brand, which allows us to group receipts by brands.
+
+User Data:
+
+Users have a created_date field that allows us to filter those created in the past 6 months.
+
+Month Periods:
+
+"Recent month" is the current month, and "Previous month" refers to the month prior to that.
+
+
+
+For now we use the CPG in the same table in brands but if we get more information, we should normalize by creating a new CPG table with its own data. So i have included that in the ER diagram as well.
